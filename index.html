@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Wallet Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0b0b0f;
+      color: white;
+      min-height: 100vh;
+      padding: 30px 18px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #999;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #15151c;
+      border: 1px solid #292936;
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      background: #0e0e13;
+      border: 1px solid #333341;
+      border-radius: 10px;
+      color: white;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #8b5cf6;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .stat {
+      background: #101016;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .label {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #status {
+      color: #aaa;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .transaction {
+      padding: 14px 0;
+      border-bottom: 1px solid #292936;
+      word-break: break-all;
+    }
+
+    .transaction:last-child {
+      border-bottom: none;
+    }
+
+    .signature {
+      color: #a78bfa;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Solana Wallet Dashboard</h1>
+  <p class="subtitle">
+    Explore wallet balances and recent on-chain activity.
+  </p>
+
+  <div class="card">
+    <input
+      id="wallet"
+      placeholder="Enter a Solana wallet address"
+    >
+
+    <button onclick="loadWallet()">
+      Analyze Wallet
+    </button>
+
+    <p id="status"></p>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+
+      <div class="stat">
+        <div class="label">SOL Balance</div>
+        <div class="value" id="balance">—</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Recent Transactions</div>
+        <div class="value" id="txCount">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Activity</h2>
+    <div id="transactions" style="margin-top:15px;">
+      Enter a wallet address above to view activity.
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const RPC_URL = "https://api.mainnet-beta.solana.com";
+
+async function rpc(method, params) {
+
+  const response = await fetch(RPC_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: method,
+      params: params
+    })
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(data.error.message);
+  }
+
+  return data.result;
+}
+
+async function loadWallet() {
+
+  const wallet = document.getElementById("wallet").value.trim();
+  const status = document.getElementById("status");
+  const balance = document.getElementById("balance");
+  const txCount = document.getElementById("txCount");
+  const transactions = document.getElementById("transactions");
+
+  if (!wallet) {
+    status.textContent = "Please enter a wallet address.";
+    return;
+  }
+
+  status.textContent = "Loading on-chain data...";
+  balance.textContent = "—";
+  txCount.textContent = "—";
+  transactions.innerHTML = "";
+
+  try {
+
+    const balanceResult = await rpc(
+      "getBalance",
+      [wallet]
+    );
+
+    const solBalance =
+      balanceResult.value / 1000000000;
+
+    balance.textContent =
+      solBalance.toFixed(4) + " SOL";
+
+    const signatures = await rpc(
+      "getSignaturesForAddress",
+      [
+        wallet,
+        {
+          limit: 10
+        }
+      ]
+    );
+
+    txCount.textContent = signatures.length;
+
+    if (signatures.length === 0) {
+
+      transactions.innerHTML =
+        "No recent transactions found.";
+
+    } else {
+
+      signatures.forEach(tx => {
+
+        const div =
+          document.createElement("div");
+
+        div.className = "transaction";
+
+        const shortSignature =
+          tx.signature.slice(0, 20) + "...";
+
+        div.innerHTML = `
+          <div class="signature">
+            ${shortSignature}
+          </div>
+          <div style="margin-top:6px;color:#aaa;">
+            ${tx.err ? "Failed transaction" : "Successful transaction"}
+          </div>
+        `;
+
+        transactions.appendChild(div);
+
+      });
+
+    }
+
+    status.textContent =
+      "Wallet data loaded from Solana mainnet.";
+
+  } catch (error) {
+
+    status.textContent =
+      "Error: " + error.message;
+
+    balance.textContent = "—";
+    txCount.textContent = "—";
+
+    transactions.innerHTML =
+      "Unable to load wallet data.";
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
