@@ -29,7 +29,9 @@ input{transition:border-color .2s ease,box-shadow .2s ease}
 .activity{animation:rise-in .35s ease both}
 .activity:nth-child(2){animation-delay:.035s}.activity:nth-child(3){animation-delay:.07s}.activity:nth-child(4){animation-delay:.105s}.activity:nth-child(5){animation-delay:.14s}
 .token-icon{transition:transform .2s ease,background .2s ease}.token-icon:hover{transform:rotate(-8deg) scale(1.08);background:#3b2e64}
-.graph{transition:border-color .25s ease,box-shadow .25s ease}.graph:hover{border-color:#51447b;box-shadow:0 0 25px #9945ff14}
+.graph{transition:border-color .25s ease,box-shadow .25s ease;touch-action:pan-y}.graph:hover{border-color:#51447b;box-shadow:0 0 25px #9945ff14}
+#relationshipMap{background:radial-gradient(ellipse at 50% 45%,#171a39 0%,#0a101d 70%);cursor:grab}#relationshipMap:active{cursor:grabbing}
+.map-shell{position:relative;perspective:900px;isolation:isolate}.map-shell:after{content:"LIVE NETWORK FIELD";position:absolute;top:12px;left:14px;font-size:9px;letter-spacing:.16em;color:#8190b3;pointer-events:none}.map-shell:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:14px;background:linear-gradient(115deg,transparent 20%,#ffffff08 48%,transparent 72%);background-size:220% 100%;animation:shimmer 7s linear infinite;z-index:1}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 @media(max-width:760px){body{padding:18px 12px}.top{align-items:flex-start}.pill{display:none}.hero{padding:18px}.search{flex-direction:column}.span-3,.span-4,.span-5,.span-7,.span-8{grid-column:span 12}.grid{gap:12px}.fingerprint{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:16px}.graph{height:250px}}
 </style>
@@ -81,7 +83,7 @@ input{transition:border-color .2s ease,box-shadow .2s ease}
       <article class="card span-12">
         <div class="section-head"><h3>Wallet Relationship Map</h3><span class="badge">Observed transaction links</span></div>
         <div class="sub">This first-pass map shows the analyzed wallet and program accounts involved in fetched recent transactions when transaction details are available. It does not prove ownership or personal relationships.</div>
-        <canvas id="relationshipMap" class="graph" width="1000" height="300" aria-label="Wallet relationship map"></canvas>
+        <div class="map-shell"><canvas id="relationshipMap" class="graph" width="1000" height="420" aria-label="Animated 3D-style wallet relationship map"></canvas></div>
         <div id="mapLegend" class="legend">Analyze a wallet to build a map from available transaction details.</div>
       </article>
     </div>
@@ -128,15 +130,36 @@ function renderActivity(sigs){
  $("topProgram").textContent="Details needed";
  return oldest;
 }
+let mapFrame = 0, mapNodes = [], mapRotation = 0, mapPointer = {x:0,y:0};
 function drawMap(wallet,txs){
  const c=$("relationshipMap"),ctx=c.getContext("2d"),w=c.width,h=c.height;
- ctx.clearRect(0,0,w,h);ctx.fillStyle="#0a101d";ctx.fillRect(0,0,w,h);
- const nodes=[{id:wallet,label:"Wallet "+short(wallet),x:w/2,y:h/2,r:25,core:true}];
+ cancelAnimationFrame(mapFrame);
  const unique=new Set();
- txs.forEach(tx=>(tx.transaction?.message?.accountKeys||[]).forEach(k=>{const key=typeof k==="string"?k:k.pubkey;if(key&&key!==wallet&&!unique.has(key)&&unique.size<12){unique.add(key);nodes.push({id:key,label:short(key),x:0,y:0,r:13})}}));
- nodes.slice(1).forEach((n,i)=>{const a=2*Math.PI*i/Math.max(1,nodes.length-1);n.x=w/2+Math.cos(a)*Math.min(170,w*.28);n.y=h/2+Math.sin(a)*Math.min(95,h*.3);ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(n.x,n.y);ctx.strokeStyle="#39425e";ctx.lineWidth=1.5;ctx.stroke()});
- nodes.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.core?"#14f195":"#7544cf";ctx.fill();ctx.strokeStyle=n.core?"#b5ffdd":"#aa8af4";ctx.stroke();ctx.fillStyle="#f4f7ff";ctx.font=n.core?"bold 12px system-ui":"11px system-ui";ctx.textAlign="center";ctx.fillText(n.label,n.x,n.y+n.r+15)});
- $("mapLegend").textContent=nodes.length>1?`Showing the wallet and ${nodes.length-1} distinct accounts observed in recent transaction details. Lines indicate co-occurrence, not ownership.`:"Only the wallet is shown because transaction details were unavailable or no additional accounts were returned.";
+ mapNodes=[{id:wallet,label:"WALLET  "+short(wallet),r:23,core:true,phase:0}];
+ txs.forEach((tx,ti)=>(tx.transaction?.message?.accountKeys||[]).forEach(k=>{const key=typeof k==="string"?k:k.pubkey;if(key&&key!==wallet&&!unique.has(key)&&unique.size<15){unique.add(key);mapNodes.push({id:key,label:short(key),r:10+(unique.size%3)*2,phase:ti*.8+unique.size*.72})}}));
+ mapNodes.slice(1).forEach((n,i)=>{n.orbit= i%3===0?1:(i%3===1?0.72:1.22);n.angle=2*Math.PI*i/Math.max(1,mapNodes.length-1);n.depth=(i%5)/5});
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function frame(now){
+  ctx.clearRect(0,0,w,h);
+  const bg=ctx.createRadialGradient(w*.5,h*.45,10,w*.5,h*.5,w*.65);bg.addColorStop(0,'#171a39');bg.addColorStop(1,'#080d18');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  const t=reduced?0:now*.00032;
+  // tilted orbital rings create a subtle 3D stage
+  ctx.save();ctx.translate(w/2,h/2+12);ctx.rotate(-.12+mapPointer.y*.00025);
+  [105,155,205].forEach((rx,i)=>{ctx.beginPath();ctx.ellipse(0,0,Math.min(rx,w*.31),Math.min(45+i*18,h*.27),t*.18*(i+1),0,Math.PI*2);ctx.strokeStyle=['#9945ff36','#55d6ff2a','#14f19522'][i];ctx.lineWidth=1;ctx.stroke()});ctx.restore();
+  // faint stars / particles
+  for(let i=0;i<42;i++){const x=(i*173+31)%w,y=(i*89+17)%h;ctx.beginPath();ctx.arc(x,y,((i%3)+1)*.55,0,Math.PI*2);ctx.fillStyle=`rgba(150,177,255,${.13+.1*Math.sin(t*4+i)})`;ctx.fill()}
+  const center={x:w/2+mapPointer.x*.08,y:h/2+12+mapPointer.y*.06,z:1};
+  const projected=[{...mapNodes[0],...center,scale:1,depth:1}];
+  mapNodes.slice(1).forEach((n,i)=>{const a=n.angle+t*(n.orbit*.8)+mapRotation;const rx=Math.min(205,w*.32)*n.orbit;const ry=Math.min(110,h*.29)*n.orbit;const orbitX=Math.cos(a)*rx;const orbitY=Math.sin(a)*ry;const z=Math.sin(a)*.5+Math.cos(a*.7+n.phase)*.16;const perspective=1/(1.25-z*.22);projected.push({...n,x:center.x+orbitX*perspective,y:center.y+orbitY*perspective,z,scale:perspective*(.78+(z+1)*.13),depth:z})});
+  // draw links first, with animated travelling energy dots
+  projected.slice(1).forEach((n,i)=>{const p=projected[0];ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(n.x,n.y);ctx.strokeStyle=n.depth>0?'rgba(85,214,255,.32)':'rgba(153,69,255,.38)';ctx.lineWidth=1+Math.max(0,n.depth)*.8;ctx.stroke();if(!reduced){const q=(t*1.7+i*.19)%1;const px=p.x+(n.x-p.x)*q,py=p.y+(n.y-p.y)*q;ctx.beginPath();ctx.arc(px,py,2.2,0,Math.PI*2);ctx.fillStyle=i%2?'#55d6ff':'#14f195';ctx.shadowBlur=12;ctx.shadowColor=ctx.fillStyle;ctx.fill();ctx.shadowBlur=0}});
+  // render far nodes before near nodes for a stronger depth cue
+  projected.slice(1).sort((a,b)=>a.depth-b.depth).concat(projected[0]).forEach((n)=>{const r=n.r*(n.scale||1);const glow=ctx.createRadialGradient(n.x-r*.25,n.y-r*.35,1,n.x,n.y,r*2.5);glow.addColorStop(0,n.core?'#c8ffe8aa':'#a98aff66');glow.addColorStop(1,'#9945ff00');ctx.beginPath();ctx.arc(n.x,n.y,r*2.5,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);const fill=ctx.createLinearGradient(n.x-r,n.y-r,n.x+r,n.y+r);fill.addColorStop(0,n.core?'#b5ffdd':'#a98aff');fill.addColorStop(1,n.core?'#14f195':'#5830a9');ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=n.core?'#d6ffed':'#c5b4ff';ctx.lineWidth=n.core?2:1.2;ctx.stroke();if(n.core&&!reduced){ctx.beginPath();ctx.arc(n.x,n.y,r+8+Math.sin(t*5)*3,0,Math.PI*2);ctx.strokeStyle='#14f19566';ctx.stroke()}ctx.fillStyle='#f4f7ff';ctx.font=n.core?'bold 12px system-ui':'10px system-ui';ctx.textAlign='center';ctx.fillText(n.label,n.x,n.y+r+15)});
+  if(!reduced)mapFrame=requestAnimationFrame(frame);
+ }
+ frame(performance.now());
+ if(!c.dataset.interactive){c.dataset.interactive='1';c.addEventListener('pointermove',e=>{const rect=c.getBoundingClientRect();mapPointer.x=(e.clientX-rect.left)/rect.width*1000-500;mapPointer.y=(e.clientY-rect.top)/rect.height*420-210});c.addEventListener('pointerleave',()=>{mapPointer={x:0,y:0}});c.addEventListener('click',()=>{mapRotation+=.28})}
+ $("mapLegend").textContent=mapNodes.length>1?`Animated 3D-style view: wallet + ${mapNodes.length-1} distinct accounts from fetched transactions. Move your pointer to tilt the view; click to rotate. Lines show co-occurrence, not ownership.`:"Only the wallet is shown because transaction details were unavailable or no additional accounts were returned.";
 }
 function renderShare(wallet,sol,sigs,tokens){
  $("shareAddress").textContent=short(wallet);$("shareSol").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
