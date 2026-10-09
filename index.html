@@ -1,300 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Wallet Dashboard</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      background: #0b0b0f;
-      color: white;
-      min-height: 100vh;
-      padding: 30px 18px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-
-    h1 {
-      font-size: 34px;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      color: #999;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: #15151c;
-      border: 1px solid #292936;
-      border-radius: 16px;
-      padding: 22px;
-      margin-bottom: 18px;
-    }
-
-    input {
-      width: 100%;
-      padding: 15px;
-      background: #0e0e13;
-      border: 1px solid #333341;
-      border-radius: 10px;
-      color: white;
-      font-size: 15px;
-      margin-bottom: 12px;
-    }
-
-    button {
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 10px;
-      background: #8b5cf6;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-    }
-
-    .stat {
-      background: #101016;
-      border-radius: 12px;
-      padding: 18px;
-    }
-
-    .label {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .value {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    #status {
-      color: #aaa;
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    .transaction {
-      padding: 14px 0;
-      border-bottom: 1px solid #292936;
-      word-break: break-all;
-    }
-
-    .transaction:last-child {
-      border-bottom: none;
-    }
-
-    .signature {
-      color: #a78bfa;
-      font-size: 13px;
-    }
-
-    @media (max-width: 600px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solana Wallet Explorer</title>
+<style>
+:root{color-scheme:dark;--bg:#080b14;--panel:#111827;--panel2:#151e30;--line:#253047;--text:#f4f7ff;--muted:#9aa8c2;--purple:#9945ff;--green:#14f195;--cyan:#55d6ff;--warn:#ffca72}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#18213b 0%,var(--bg) 55%);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;padding:28px 16px 60px}
+main{max-width:1180px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--green));display:grid;place-items:center;color:#07111b;font-weight:1000;font-size:22px;box-shadow:0 0 30px #9945ff55}.eyebrow{color:var(--green);text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800}.top h1{font-size:clamp(24px,4vw,38px);line-height:1.1;margin:3px 0}.pill{border:1px solid #2c3b54;border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px;white-space:nowrap}
+.hero{padding:25px;border:1px solid #2c3851;border-radius:24px;background:linear-gradient(130deg,#171c32eF,#101725f2);box-shadow:0 20px 70px #0004;margin-bottom:18px}.hero h2{margin:0 0 6px;font-size:24px}.hero p{color:var(--muted);margin:0 0 20px}.search{display:flex;gap:10px}.search input{min-width:0;flex:1;background:#080e1b;border:1px solid #33415b;border-radius:12px;padding:15px;color:white;font:inherit;outline:none}.search input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #9945ff22}button{font:inherit;font-weight:750;border:0;border-radius:12px;padding:13px 17px;cursor:pointer;background:linear-gradient(100deg,var(--purple),#7a67ff);color:white}button.secondary{background:#202a3e;border:1px solid #34415a}button:disabled{opacity:.72;cursor:wait}.spinner{display:inline-block;width:13px;height:13px;border:2px solid #ffffff66;border-top-color:#fff;border-radius:50%;vertical-align:-2px;margin-right:5px;animation:spin .75s linear infinite}.hint,.status{font-size:12px;color:var(--muted);margin-top:12px}.status{min-height:18px}.error{color:#ff9696}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}.card{background:linear-gradient(145deg,#121a2a,#0e1421);border:1px solid var(--line);border-radius:19px;padding:20px;min-width:0}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:span 12}.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:750}.value{font-size:clamp(22px,3vw,32px);font-weight:850;letter-spacing:-.04em;margin:9px 0 2px;overflow-wrap:anywhere}.sub{font-size:12px;color:var(--muted)}.card h3{margin:0 0 15px;font-size:17px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-head h3{margin:0}.badge{font-size:11px;color:var(--green);border:1px solid #14f19555;border-radius:999px;padding:4px 8px}.empty{color:var(--muted);font-size:13px;padding:15px 0}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #243047;white-space:nowrap}th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em}td a{color:var(--cyan);text-decoration:none}.token-icon{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#283047;margin-right:8px;font-size:11px}.activity{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid #243047}.activity:last-child{border:0}.activity-dot{width:9px;height:9px;border-radius:50%;background:var(--green);margin-top:7px;flex-shrink:0}.activity .mainline{font-size:13px;overflow-wrap:anywhere}.activity .meta{font-size:11px;color:var(--muted);margin-top:3px}.fingerprint{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.mini{background:#0a1120;border:1px solid #253148;border-radius:13px;padding:14px}.mini strong{display:block;font-size:22px;margin-top:4px}.bars{display:flex;gap:5px;align-items:end;height:78px;margin-top:15px}.bar{flex:1;background:linear-gradient(180deg,var(--purple),#4e35a0);border-radius:5px 5px 2px 2px;min-height:4px;position:relative}.bar span{position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted)}.share-card{background:radial-gradient(circle at 100% 0,#5330a7 0,transparent 40%),linear-gradient(135deg,#151e32,#090e19);border:1px solid #3b3a66;border-radius:18px;padding:22px;position:relative;overflow:hidden}.share-card:after{content:"SOLANA";position:absolute;right:-6px;bottom:-22px;font-size:60px;font-weight:1000;color:#ffffff08;letter-spacing:-4px}.share-address{font-size:13px;color:var(--cyan);overflow-wrap:anywhere;margin:12px 0}.share-balance{font-size:32px;font-weight:900}.share-foot{color:var(--muted);font-size:11px;margin-top:12px}.graph{width:100%;height:300px;background:#0a101d;border:1px solid #26334b;border-radius:14px;display:block}.legend{font-size:11px;color:var(--muted);margin-top:10px}.foot{text-align:center;color:#71809a;font-size:11px;margin-top:26px}.hidden{display:none!important}.smallbtn{padding:8px 11px;font-size:12px}.safety{color:var(--warn)}@keyframes rise-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 0 0 #14f19500}50%{box-shadow:0 0 0 7px #14f19512}}
+@keyframes gradient-drift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+body{background-size:180% 180%;animation:gradient-drift 22s ease infinite}
+.logo{animation:glow-pulse 4s ease-in-out infinite}
+.hero{animation:rise-in .65s cubic-bezier(.2,.7,.2,1) both}
+.hero:before{content:"";display:block;position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(115deg,transparent 20%,#ffffff08 48%,transparent 72%);background-size:220% 100%;animation:shimmer 8s linear infinite}
+.hero{position:relative;overflow:hidden}
+.card{animation:rise-in .55s cubic-bezier(.2,.7,.2,1) both;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.card:hover{transform:translateY(-3px);border-color:#485a7b;box-shadow:0 14px 35px #0003}
+button{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+button:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 8px 22px #9945ff33}
+button:active{transform:translateY(0) scale(.985)}
+input{transition:border-color .2s ease,box-shadow .2s ease}
+.badge{animation:glow-pulse 5s ease-in-out infinite}
+.value{transition:opacity .25s ease}
+.activity{animation:rise-in .35s ease both}
+.activity:nth-child(2){animation-delay:.035s}.activity:nth-child(3){animation-delay:.07s}.activity:nth-child(4){animation-delay:.105s}.activity:nth-child(5){animation-delay:.14s}
+.token-icon{transition:transform .2s ease,background .2s ease}.token-icon:hover{transform:rotate(-8deg) scale(1.08);background:#3b2e64}
+.graph{transition:border-color .25s ease,box-shadow .25s ease}.graph:hover{border-color:#51447b;box-shadow:0 0 25px #9945ff14}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+@media(max-width:760px){body{padding:18px 12px}.top{align-items:flex-start}.pill{display:none}.hero{padding:18px}.search{flex-direction:column}.span-3,.span-4,.span-5,.span-7,.span-8{grid-column:span 12}.grid{gap:12px}.fingerprint{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:16px}.graph{height:250px}}
+</style>
 </head>
-
 <body>
-
-<div class="container">
-
-  <h1>Solana Wallet Dashboard</h1>
-  <p class="subtitle">
-    Explore wallet balances and recent on-chain activity.
-  </p>
-
-  <div class="card">
-    <input
-      id="wallet"
-      placeholder="Enter a Solana wallet address"
-    >
-
-    <button onclick="loadWallet()">
-      Analyze Wallet
-    </button>
-
-    <p id="status"></p>
-  </div>
-
-  <div class="card">
+<main>
+  <header class="top">
+    <div class="brand"><div class="logo">S</div><div><div class="eyebrow">On-chain intelligence</div><h1>Solana Wallet Explorer</h1></div></div>
+    <div class="pill">SOLANA MAINNET · PUBLIC DATA</div>
+  </header>
+  <section class="hero">
+    <h2>Every wallet has a story.</h2>
+    <p>Explore balances, activity patterns and on-chain connections from a single wallet address.</p>
+    <div class="search"><input id="wallet" autocomplete="off" spellcheck="false" placeholder="Paste a Solana wallet address" aria-label="Solana wallet address"><button id="analyze">Analyze wallet ↗</button></div>
+    <div class="hint">Read-only explorer. Never enter a seed phrase or private key.</div>
+    <div id="status" class="status">Enter a public Solana address to begin.</div>
+  </section>
+  <section id="results" class="hidden">
     <div class="grid">
-
-      <div class="stat">
-        <div class="label">SOL Balance</div>
-        <div class="value" id="balance">—</div>
-      </div>
-
-      <div class="stat">
-        <div class="label">Recent Transactions</div>
-        <div class="value" id="txCount">—</div>
-      </div>
-
+      <article class="card span-3"><div class="label">SOL balance</div><div id="solBalance" class="value">—</div><div class="sub">Current native SOL</div></article>
+      <article class="card span-3"><div class="label">Recent signatures</div><div id="txCount" class="value">—</div><div class="sub">Recent activity returned by RPC</div></article>
+      <article class="card span-3"><div class="label">Wallet age</div><div id="walletAge" class="value">—</div><div class="sub">Based on oldest fetched signature</div></article>
+      <article class="card span-3"><div class="label">Tokens found</div><div id="tokenCount" class="value">—</div><div class="sub">Non-zero token accounts</div></article>
+      <article class="card span-7">
+        <div class="section-head"><h3>Wallet Fingerprint</h3><span class="badge">Observed activity</span></div>
+        <div class="fingerprint">
+          <div class="mini"><div class="label">Active days</div><strong id="activeDays">—</strong><div class="sub">Across fetched signatures</div></div>
+          <div class="mini"><div class="label">Successful txs</div><strong id="successTx">—</strong><div class="sub">In fetched sample</div></div>
+          <div class="mini"><div class="label">Failed txs</div><strong id="failedTx">—</strong><div class="sub">In fetched sample</div></div>
+          <div class="mini"><div class="label">Top program</div><strong id="topProgram" style="font-size:15px">—</strong><div class="sub">Among decoded recent transactions</div></div>
+        </div>
+        <div class="label" style="margin-top:22px">Activity by weekday</div><div id="weekdayBars" class="bars"></div>
+      </article>
+      <article class="card span-5">
+        <div class="section-head"><h3>Shareable wallet card</h3><span class="badge">Your wallet, your story</span></div>
+        <div id="shareCard" class="share-card"><div class="eyebrow">Solana wallet profile</div><div id="shareAddress" class="share-address">—</div><div id="shareSol" class="share-balance">— SOL</div><div id="shareStats" class="share-foot">Analyzed with Solana Wallet Explorer</div></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="copyLink" class="secondary smallbtn">Copy profile link</button><button id="downloadCard" class="smallbtn">Download card image</button></div>
+        <div class="sub" style="margin-top:8px">The downloaded card is generated in your browser.</div>
+      </article>
+      <article class="card span-12">
+        <div class="section-head"><h3>Token & Spam Inspector</h3><span class="badge">On-chain token accounts</span></div>
+        <div class="sub safety">Token presence alone does not prove a token is safe or malicious. Verify mint addresses independently.</div>
+        <div id="tokens" class="table-wrap"><div class="empty">Token data will appear after analysis.</div></div>
+      </article>
+      <article class="card span-12">
+        <div class="section-head"><h3>Recent activity</h3><span class="badge">Latest signatures</span></div>
+        <div id="activity"><div class="empty">No activity loaded yet.</div></div>
+      </article>
+      <article class="card span-12">
+        <div class="section-head"><h3>Wallet Relationship Map</h3><span class="badge">Observed transaction links</span></div>
+        <div class="sub">This first-pass map shows the analyzed wallet and program accounts involved in fetched recent transactions when transaction details are available. It does not prove ownership or personal relationships.</div>
+        <canvas id="relationshipMap" class="graph" width="1000" height="300" aria-label="Wallet relationship map"></canvas>
+        <div id="mapLegend" class="legend">Analyze a wallet to build a map from available transaction details.</div>
+      </article>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>Recent Activity</h2>
-    <div id="transactions" style="margin-top:15px;">
-      Enter a wallet address above to view activity.
-    </div>
-  </div>
-
-</div>
-
+  </section>
+  <div class="foot">Built for learning and transparent on-chain exploration · No seed phrases · No private keys</div>
+</main>
 <script>
-
 const RPC_URL = "https://delicate-dust-d00f.0xhexor.workers.dev";
-
-async function rpc(method, params) {
-
-  const response = await fetch(RPC_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: method,
-      params: params
-    })
-  });
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error.message);
-  }
-
-  return data.result;
+const $ = id => document.getElementById(id);
+let lastWallet = "", lastData = null;
+const short = s => s ? s.slice(0,5)+"…"+s.slice(-5) : "—";
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function setStatus(msg,error=false){$("status").textContent=msg;$("status").className="status"+(error?" error":"")}
+async function rpc(method,params=[]){
+ const r=await fetch(RPC_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:Date.now(),method,params})});
+ if(!r.ok) throw new Error("RPC proxy returned HTTP "+r.status);
+ const j=await r.json();if(j.error)throw new Error(j.error.message||"RPC request failed");return j.result;
 }
-
-async function loadWallet() {
-
-  const wallet = document.getElementById("wallet").value.trim();
-  const status = document.getElementById("status");
-  const balance = document.getElementById("balance");
-  const txCount = document.getElementById("txCount");
-  const transactions = document.getElementById("transactions");
-
-  if (!wallet) {
-    status.textContent = "Please enter a wallet address.";
-    return;
-  }
-
-  status.textContent = "Loading on-chain data...";
-  balance.textContent = "—";
-  txCount.textContent = "—";
-  transactions.innerHTML = "";
-
-  try {
-
-    const balanceResult = await rpc(
-      "getBalance",
-      [wallet]
-    );
-
-    const solBalance =
-      balanceResult.value / 1000000000;
-
-    balance.textContent =
-      solBalance.toFixed(4) + " SOL";
-
-    const signatures = await rpc(
-      "getSignaturesForAddress",
-      [
-        wallet,
-        {
-          limit: 10
-        }
-      ]
-    );
-
-    txCount.textContent = signatures.length;
-
-    if (signatures.length === 0) {
-
-      transactions.innerHTML =
-        "No recent transactions found.";
-
-    } else {
-
-      signatures.forEach(tx => {
-
-        const div =
-          document.createElement("div");
-
-        div.className = "transaction";
-
-        const shortSignature =
-          tx.signature.slice(0, 20) + "...";
-
-        div.innerHTML = `
-          <div class="signature">
-            ${shortSignature}
-          </div>
-          <div style="margin-top:6px;color:#aaa;">
-            ${tx.err ? "Failed transaction" : "Successful transaction"}
-          </div>
-        `;
-
-        transactions.appendChild(div);
-
-      });
-
-    }
-
-    status.textContent =
-      "Wallet data loaded from Solana mainnet.";
-
-  } catch (error) {
-
-    status.textContent =
-      "Error: " + error.message;
-
-    balance.textContent = "—";
-    txCount.textContent = "—";
-
-    transactions.innerHTML =
-      "Unable to load wallet data.";
-
-  }
-
+function isAddress(s){return typeof s==="string"&&s.length>=32&&s.length<=44&&/^[1-9A-HJ-NP-Za-km-z]+$/.test(s)}
+function fmtDate(ts){return ts?new Date(ts*1000).toLocaleString():"Timestamp unavailable"}
+function makeBars(sigs){
+ const names=["S","M","T","W","T","F","S"],counts=[0,0,0,0,0,0,0];
+ sigs.forEach(x=>{if(x.blockTime)counts[new Date(x.blockTime*1000).getDay()]++});
+ const max=Math.max(1,...counts);
+ $("weekdayBars").innerHTML=counts.map((n,i)=>`<div class="bar" style="height:${Math.max(5,n/max*70)}px" title="${n} transactions"><span>${names[i]}</span></div>`).join("");
 }
-
+function renderTokens(result){
+ const accounts=result?.value||[];
+ const rows=accounts.map(a=>{const info=a.account?.data?.parsed?.info||{};const amount=info.tokenAmount||{};return {mint:info.mint||"",amount:Number(amount.uiAmountString||amount.uiAmount||0),decimals:amount.decimals??0,program:a.account?.owner||""}}).filter(t=>t.mint&&t.amount!==0);
+ $("tokenCount").textContent=rows.length;
+ $("tokens").innerHTML=rows.length?`<table><thead><tr><th>Token mint</th><th>Balance</th><th>Decimals</th><th>Explorer</th></tr></thead><tbody>${rows.slice(0,100).map(t=>`<tr><td><span class="token-icon">◎</span>${esc(short(t.mint))}</td><td>${esc(t.amount.toLocaleString(undefined,{maximumFractionDigits:6}))}</td><td>${t.decimals}</td><td><a href="https://explorer.solana.com/address/${encodeURIComponent(t.mint)}" target="_blank" rel="noopener">Inspect ↗</a></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No non-zero token accounts were returned, or token lookup is not enabled in the proxy yet.</div>`;
+ return rows;
+}
+function renderActivity(sigs){
+ $("txCount").textContent=sigs.length;
+ const success=sigs.filter(x=>!x.err).length;
+ $("successTx").textContent=success;$("failedTx").textContent=sigs.length-success;
+ const days=new Set(sigs.filter(x=>x.blockTime).map(x=>new Date(x.blockTime*1000).toDateString()));
+ $("activeDays").textContent=days.size;
+ const oldest=sigs.filter(x=>x.blockTime).map(x=>x.blockTime).sort((a,b)=>a-b)[0];
+ $("walletAge").textContent=oldest?Math.max(0,Math.floor((Date.now()/1000-oldest)/86400))+"d":"Unknown";
+ makeBars(sigs);
+ $("activity").innerHTML=sigs.length?sigs.slice(0,15).map((s,i)=>`<div class="activity"><div class="activity-dot" style="background:${s.err?"#ff7272":"var(--green)"}"></div><div style="min-width:0;flex:1"><div class="mainline"><strong>${s.err?"Failed transaction":"Transaction"}</strong> · <a style="color:var(--cyan)" href="https://explorer.solana.com/tx/${encodeURIComponent(s.signature)}" target="_blank" rel="noopener">View on Solana Explorer ↗</a></div><div class="meta">${esc(fmtDate(s.blockTime))} · ${esc(short(s.signature))}</div></div></div>`).join(""):`<div class="empty">No recent signatures returned for this wallet.</div>`;
+ $("topProgram").textContent="Details needed";
+ return oldest;
+}
+function drawMap(wallet,txs){
+ const c=$("relationshipMap"),ctx=c.getContext("2d"),w=c.width,h=c.height;
+ ctx.clearRect(0,0,w,h);ctx.fillStyle="#0a101d";ctx.fillRect(0,0,w,h);
+ const nodes=[{id:wallet,label:"Wallet "+short(wallet),x:w/2,y:h/2,r:25,core:true}];
+ const unique=new Set();
+ txs.forEach(tx=>(tx.transaction?.message?.accountKeys||[]).forEach(k=>{const key=typeof k==="string"?k:k.pubkey;if(key&&key!==wallet&&!unique.has(key)&&unique.size<12){unique.add(key);nodes.push({id:key,label:short(key),x:0,y:0,r:13})}}));
+ nodes.slice(1).forEach((n,i)=>{const a=2*Math.PI*i/Math.max(1,nodes.length-1);n.x=w/2+Math.cos(a)*Math.min(170,w*.28);n.y=h/2+Math.sin(a)*Math.min(95,h*.3);ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(n.x,n.y);ctx.strokeStyle="#39425e";ctx.lineWidth=1.5;ctx.stroke()});
+ nodes.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=n.core?"#14f195":"#7544cf";ctx.fill();ctx.strokeStyle=n.core?"#b5ffdd":"#aa8af4";ctx.stroke();ctx.fillStyle="#f4f7ff";ctx.font=n.core?"bold 12px system-ui":"11px system-ui";ctx.textAlign="center";ctx.fillText(n.label,n.x,n.y+n.r+15)});
+ $("mapLegend").textContent=nodes.length>1?`Showing the wallet and ${nodes.length-1} distinct accounts observed in recent transaction details. Lines indicate co-occurrence, not ownership.`:"Only the wallet is shown because transaction details were unavailable or no additional accounts were returned.";
+}
+function renderShare(wallet,sol,sigs,tokens){
+ $("shareAddress").textContent=short(wallet);$("shareSol").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
+ $("shareStats").textContent=`${sigs.length} recent signatures · ${tokens.length} non-zero token accounts · Solana mainnet`;
+ const url=new URL(location.href);url.searchParams.set("wallet",wallet);history.replaceState(null,"",url.toString());
+}
+async function analyze(){
+ const wallet=$("wallet").value.trim();if(!isAddress(wallet)){setStatus("Please enter a valid-looking Solana public address.",true);return}
+ $("analyze").disabled=true;$("analyze").innerHTML='<span class="spinner" aria-hidden="true"></span> Analyzing…';$("results").classList.remove("hidden");setStatus("Loading wallet data…");
+ lastWallet=wallet;
+ try{
+  const [bal,sigs]=await Promise.all([rpc("getBalance",[wallet,{commitment:"confirmed"}]),rpc("getSignaturesForAddress",[wallet,{limit:50,commitment:"confirmed"}])]);
+  const sol=Number(bal.value||0)/1e9;
+  $("solBalance").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
+  const oldest=renderActivity(sigs||[]);
+  $("shareAddress").textContent=short(wallet);$("shareSol").textContent=sol.toLocaleString(undefined,{maximumFractionDigits:6})+" SOL";
+  let tokens=[];
+  try{const tok=await rpc("getTokenAccountsByOwner",[wallet,{programId:"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},{encoding:"jsonParsed",commitment:"confirmed"}]);tokens=renderTokens(tok)}catch(e){$("tokenCount").textContent="—";$("tokens").innerHTML=`<div class="empty">Token lookup isn't enabled by the current Cloudflare proxy yet. We'll enable it in the next step.</div>`}
+  renderShare(wallet,sol,sigs||[],tokens);
+  let txs=[];
+  try{for(const s of (sigs||[]).slice(0,8)){try{const tx=await rpc("getTransaction",[s.signature,{encoding:"jsonParsed",maxSupportedTransactionVersion:0,commitment:"confirmed"}]);if(tx)txs.push(tx)}catch(_){}}}catch(_){}
+  const counts={};txs.forEach(tx=>(tx.transaction?.message?.instructions||[]).forEach(ins=>{const p=ins.program||ins.programId;if(p)counts[p]=(counts[p]||0)+1}));
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];$("topProgram").textContent=top?top[0]:"Not available";
+  drawMap(wallet,txs);
+  lastData={wallet,sol,sigs:sigs||[],tokens};
+  setStatus("Analysis complete. Some sections may need additional RPC permissions enabled in Cloudflare.");
+ }catch(e){setStatus("Couldn't load wallet data: "+e.message+". Check the Worker URL and allowed RPC methods.",true)}
+ finally{$("analyze").disabled=false;$("analyze").textContent="Analyze wallet ↗"}
+}
+$("analyze").addEventListener("click",analyze);
+$("wallet").addEventListener("keydown",e=>{if(e.key==="Enter")analyze()});
+$("copyLink").addEventListener("click",async()=>{if(!lastWallet){setStatus("Analyze a wallet first.",true);return}const u=new URL(location.href);u.searchParams.set("wallet",lastWallet);try{await navigator.clipboard.writeText(u.toString());setStatus("Profile link copied.")}catch(_){setStatus(u.toString())}});
+$("downloadCard").addEventListener("click",()=>{if(!lastData){setStatus("Analyze a wallet first.",true);return}const c=document.createElement("canvas");c.width=1200;c.height=630;const x=c.getContext("2d");const g=x.createLinearGradient(0,0,1200,630);g.addColorStop(0,"#171d35");g.addColorStop(1,"#080d18");x.fillStyle=g;x.fillRect(0,0,1200,630);x.fillStyle="#9945ff";x.beginPath();x.arc(1110,70,220,0,Math.PI*2);x.fill();x.fillStyle="#14f195";x.font="bold 24px system-ui";x.fillText("SOLANA WALLET EXPLORER",70,85);x.fillStyle="#f4f7ff";x.font="bold 58px system-ui";x.fillText("Wallet profile",70,190);x.font="28px system-ui";x.fillStyle="#55d6ff";x.fillText(short(lastData.wallet),70,250);x.fillStyle="#f4f7ff";x.font="bold 64px system-ui";x.fillText(lastData.sol.toLocaleString(undefined,{maximumFractionDigits:5})+" SOL",70,365);x.font="24px system-ui";x.fillStyle="#a5b1c7";x.fillText(`${lastData.sigs.length} recent signatures  ·  ${lastData.tokens.length} token accounts`,70,425);x.font="20px system-ui";x.fillText("Public on-chain data · Never share your seed phrase",70,560);const a=document.createElement("a");a.download="solana-wallet-profile.png";a.href=c.toDataURL("image/png");a.click()});
+const initial=new URLSearchParams(location.search).get("wallet");if(initial){$("wallet").value=initial;analyze()}
 </script>
-
 </body>
 </html>
